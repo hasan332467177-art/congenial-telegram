@@ -11,7 +11,7 @@ from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("telegram-assistant")
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
@@ -45,10 +45,17 @@ def safe_calc(expression: str):
     return visit(tree)
 
 async def authorized(update: Update) -> bool:
+    # Fail closed: only the configured owner in a one-to-one private chat.
     if not ALLOWED_USER_ID:
-        return True
+        return False
     user = update.effective_user
-    return bool(user and str(user.id) == ALLOWED_USER_ID)
+    chat = update.effective_chat
+    return bool(
+        user
+        and chat
+        and chat.type == "private"
+        and str(user.id) == ALLOWED_USER_ID
+    )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await authorized(update): return
@@ -84,8 +91,9 @@ async def calc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = safe_calc(expression)
         await update.effective_message.reply_text(f"نتیجه: {result:.12g}" if isinstance(result, float) else f"نتیجه: {result}")
-    except Exception as exc:
-        await update.effective_message.reply_text(f"خطا در محاسبه: {exc}")
+    except Exception:
+        # Never echo the submitted expression or exception details.
+        await update.effective_message.reply_text("عبارت محاسبه معتبر نیست یا قابل انجام نیست.")
 
 async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await authorized(update): return
