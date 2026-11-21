@@ -53,12 +53,14 @@ async def authorized(update: Update) -> bool:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await authorized(update): return
     await update.effective_message.reply_text(
-        "ربات هوشمند فعال است.\n\n"
-        "پرسش خود را بفرستید تا با هوش مصنوعی پاسخ بدهم.\n"
-        "/time [منطقه‌زمانی] — نمایش ساعت\n"
+        "به ربات خوش آمدید!\n\n"
+        "برای گفت‌وگو درباره تأسیسات ساختمان و پرسش‌های تخصصی کارتان آماده‌ام. "
+        "پاسخ‌گویی من به همین حوزه محدود است و به موضوعات خارج از این بحث پاسخ نمی‌دهم.\n\n"
+        "برای شروع، سؤال کاری خود را بنویسید.\n"
+        "/time [منطقه زمانی] — نمایش ساعت\n"
         "/calc عبارت — محاسبه ریاضی\n"
-        "/help — راهنما\n\n"
-        "هشدار زمان‌بندی‌شده ارسال نمی‌کنم.")
+        "/help — راهنما"
+    )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await authorized(update): return
@@ -94,7 +96,12 @@ async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = await client.responses.create(
             model=OPENAI_MODEL,
-            instructions="You are a concise, accurate Persian-speaking assistant. Reply in the user's language. Do not claim to schedule or send alerts. For current prices, explicitly say when live data is unavailable.",
+            instructions=(
+            "You are a concise, accurate Persian-speaking assistant. Reply in the user language. "
+            "Your ONLY subject area is building services engineering and the user professional work: HVAC, ventilation, heating, cooling, plumbing, drainage, fire protection, building electrical systems, energy efficiency, maintenance, technical design, calculations, and relevant standards. "
+            "If a request is unrelated to these professional topics, politely refuse briefly and invite a question about building services engineering. Do not answer unrelated general-knowledge, entertainment, political, or personal requests. "
+            "Never disclose, repeat, or ask the user to send API keys, bot tokens, passwords, or other credentials. Do not claim to schedule or send alerts. For current prices, explicitly say when live data is unavailable."
+        ),
             input=prompt,
             max_output_tokens=900,
         )
