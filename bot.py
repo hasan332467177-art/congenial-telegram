@@ -58,7 +58,6 @@ async def authorized(update: Update) -> bool:
     )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await authorized(update): return
     await update.effective_message.reply_text(
         "به ربات خوش آمدید!\n\n"
         "برای گفت‌وگو درباره تأسیسات ساختمان و پرسش‌های تخصصی کارتان آماده‌ام. "
@@ -70,11 +69,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await authorized(update): return
     await update.effective_message.reply_text("دستورات: /start ، /time [منطقه‌زمانی] ، /calc 31/38/9.1 ، /help\nبرای گفت‌وگو، متن دلخواهتان را ارسال کنید.")
 
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await authorized(update): return
     zone_name = " ".join(context.args) if context.args else DEFAULT_TIMEZONE
     try:
         now = datetime.now(ZoneInfo(zone_name))
@@ -96,7 +93,6 @@ async def calc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("عبارت محاسبه معتبر نیست یا قابل انجام نیست.")
 
 async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await authorized(update): return
     message = update.effective_message
     prompt = (message.text or "").strip()
     if not prompt: return

@@ -1,0 +1,39 @@
+name: Public Telegram bot runtime
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+
+# Keep only one long-polling instance active. The latest scheduled run waits
+# until the current run exits near GitHub's per-job time limit.
+concurrency:
+  group: telegram-bot-runtime
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Telegram long polling
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ALLOWED_TELEGRAM_USER_ID: ${{ secrets.ALLOWED_TELEGRAM_USER_ID }}
+          OPENAI_MODEL: gpt-4.1-mini
+          DEFAULT_TIMEZONE: Asia/Tehran
+        run: |
+          set +e
+          timeout --signal=TERM --kill-after=30s 350m python bot.py
+          status=$?
+          if [ "$status" -eq 124 ] || [ "$status" -eq 143 ]; then
+            echo "Scheduled runner window completed; next scheduled run will resume."
+            exit 0
+          fi
+          exit "$status"
