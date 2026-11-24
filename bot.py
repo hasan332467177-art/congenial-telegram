@@ -89,10 +89,10 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         percent = difference / low * 100
         now = datetime.now(ZoneInfo(DEFAULT_TIMEZONE))
         await update.effective_message.reply_text(
-            "نتیجه تحلیل دامنه\\n"
-            f"اختلاف محاسبه‌شده: {difference:.10g}\\n"
-            f"نسبت طبق فرمول D ÷ (38 × 9.1): {ratio:.10g}\\n"
-            f"درصد دامنه نسبت به کف: {percent:.6g}%\\n"
+            "نتیجه تحلیل دامنه\n"
+            f"اختلاف محاسبه‌شده: {difference:.10g}\n"
+            f"نسبت طبق فرمول D ÷ (38 × 9.1): {ratio:.10g}\n"
+            f"درصد دامنه نسبت به کف: {percent:.6g}%\n"
             f"زمان محاسبه: {now:%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE})"
         )
     except Exception:
@@ -133,12 +133,12 @@ async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "For market or currency analysis, never invent live or historical prices. Clearly distinguish user-provided data from verified data. "
             "Never disclose, repeat, or ask the user to send API keys, bot tokens, passwords, or other credentials. Never claim an alert has been scheduled or sent unless the system actually did so. When given high and low values, calculate D = High - Low, R = D / (38 * 9.1), and range percentage = D / Low * 100, clearly labeling each result."
         ),
-            input=f"زمان فعلی تهران: {datetime.now(ZoneInfo(DEFAULT_TIMEZONE)):%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE}).\\n\\nدرخواست کاربر: {prompt}",
+            input=f"زمان فعلی تهران: {datetime.now(ZoneInfo(DEFAULT_TIMEZONE)):%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE}).\n\nدرخواست کاربر: {prompt}",
             max_output_tokens=900,
         )
         answer = (response.output_text or "پاسخی دریافت نشد.").strip()
         now = datetime.now(ZoneInfo(DEFAULT_TIMEZONE))
-        answer += f"\\n\\nزمان پاسخ: {now:%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE})"
+        answer += f"\n\nزمان پاسخ: {now:%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE})"
         for start_at in range(0, len(answer), 4000):
             await message.reply_text(answer[start_at:start_at + 4000])
     except Exception:
