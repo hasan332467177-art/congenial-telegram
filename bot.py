@@ -60,16 +60,43 @@ async def authorized(update: Update) -> bool:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
         "به ربات خوش آمدید!\n\n"
-        "برای گفت‌وگو درباره تأسیسات ساختمان و پرسش‌های تخصصی کارتان آماده‌ام. "
-        "پاسخ‌گویی من به همین حوزه محدود است و به موضوعات خارج از این بحث پاسخ نمی‌دهم.\n\n"
-        "برای شروع، سؤال کاری خود را بنویسید.\n"
+        "تحلیل، بررسی، پاسخ به پرسش‌ها و محاسبات را انجام می‌دهم. ساعت و تاریخ تهران نیز در متن پاسخ‌ها اعلام می‌شود. "
+        "\n\n"
+        "برای شروع، درخواست تحلیل یا محاسبه خود را بنویسید.\n"
         "/time [منطقه زمانی] — نمایش ساعت\n"
-        "/calc عبارت — محاسبه ریاضی\n"
+        "/analyze HIGH LOW — تحلیل دامنه طبق فرمول قبلی\n        /calc عبارت — محاسبه خصوصی برای مالک\n"
         "/help — راهنما"
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.effective_message.reply_text("دستورات: /start ، /time [منطقه‌زمانی] ، /calc 31/38/9.1 ، /help\nبرای گفت‌وگو، متن دلخواهتان را ارسال کنید.")
+    await update.effective_message.reply_text(
+        "دستورات:\n/time [منطقه‌زمانی] — نمایش ساعت\n"
+        "/analyze HIGH LOW — محاسبه دامنه و نسبت طبق فرمول قبلی\n"
+        "/calc عبارت — محاسبه خصوصی مالک\n"
+        "برای تحلیل یا محاسبه معمولی، درخواست خود را در پیام بنویسید."
+    )
+
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 2:
+        await update.effective_message.reply_text("نمونه: /analyze 105.8 103.2")
+        return
+    try:
+        high, low = map(float, context.args)
+        if high < low or low <= 0:
+            raise ValueError("invalid high/low")
+        difference = high - low
+        ratio = difference / (38 * 9.1)
+        percent = difference / low * 100
+        now = datetime.now(ZoneInfo(DEFAULT_TIMEZONE))
+        await update.effective_message.reply_text(
+            "نتیجه تحلیل دامنه\\n"
+            f"اختلاف محاسبه‌شده: {difference:.10g}\\n"
+            f"نسبت طبق فرمول D ÷ (38 × 9.1): {ratio:.10g}\\n"
+            f"درصد دامنه نسبت به کف: {percent:.6g}%\\n"
+            f"زمان محاسبه: {now:%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE})"
+        )
+    except Exception:
+        await update.effective_message.reply_text("مقادیر معتبر نیستند؛ ابتدا عدد سقف و سپس عدد کف را وارد کنید.")
 
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     zone_name = " ".join(context.args) if context.args else DEFAULT_TIMEZONE
@@ -102,14 +129,16 @@ async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             model=OPENAI_MODEL,
             instructions=(
             "You are a concise, accurate Persian-speaking assistant. Reply in the user language. "
-            "Your ONLY subject area is building services engineering and the user professional work: HVAC, ventilation, heating, cooling, plumbing, drainage, fire protection, building electrical systems, energy efficiency, maintenance, technical design, calculations, and relevant standards. "
-            "If a request is unrelated to these professional topics, politely refuse briefly and invite a question about building services engineering. Do not answer unrelated general-knowledge, entertainment, political, or personal requests. "
-            "Never disclose, repeat, or ask the user to send API keys, bot tokens, passwords, or other credentials. Do not claim to schedule or send alerts. For current prices, explicitly say when live data is unavailable."
+            "Do not restrict topics to building services. Provide analysis, explanations, comparisons, reasoning, and mathematical calculations across topics. "
+            "For market or currency analysis, never invent live or historical prices. Clearly distinguish user-provided data from verified data. "
+            "Never disclose, repeat, or ask the user to send API keys, bot tokens, passwords, or other credentials. Never claim an alert has been scheduled or sent unless the system actually did so. When given high and low values, calculate D = High - Low, R = D / (38 * 9.1), and range percentage = D / Low * 100, clearly labeling each result."
         ),
-            input=prompt,
+            input=f"زمان فعلی تهران: {datetime.now(ZoneInfo(DEFAULT_TIMEZONE)):%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE}).\\n\\nدرخواست کاربر: {prompt}",
             max_output_tokens=900,
         )
         answer = (response.output_text or "پاسخی دریافت نشد.").strip()
+        now = datetime.now(ZoneInfo(DEFAULT_TIMEZONE))
+        answer += f"\\n\\nزمان پاسخ: {now:%Y-%m-%d %H:%M:%S} ({DEFAULT_TIMEZONE})"
         for start_at in range(0, len(answer), 4000):
             await message.reply_text(answer[start_at:start_at + 4000])
     except Exception:
@@ -126,6 +155,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("time", time_command))
+    app.add_handler(CommandHandler("analyze", analyze_command))
     app.add_handler(CommandHandler("calc", calc_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat_handler))
     log.info("Starting long-polling bot")
