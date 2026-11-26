@@ -13,5 +13,5 @@ services:
         value: gpt-4.1-mini
       - key: DEFAULT_TIMEZONE
         value: Asia/Tehran
-      - key: ALLOWED_TELEGRAM_USER_ID
+      - key: ALERT_TIMES
         sync: false
