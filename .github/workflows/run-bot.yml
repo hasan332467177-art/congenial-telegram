@@ -4,11 +4,10 @@ on:
   schedule:
     - cron: '*/5 * * * *'
 
-# Keep only one long-polling instance active. The latest scheduled run waits
-# until the current run exits near GitHub's per-job time limit.
+# A new runtime replaces the previous polling instance.
 concurrency:
   group: telegram-bot-runtime
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   run-bot:
