@@ -1,8 +1,6 @@
 name: Public Telegram bot runtime
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
 
 # A new runtime replaces the previous polling instance.
 concurrency:

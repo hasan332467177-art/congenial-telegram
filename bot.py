@@ -19,7 +19,7 @@ TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 TIMEZONE_NAME = os.getenv("DEFAULT_TIMEZONE", "Asia/Tehran")
-ALERT_TIMES = [x.strip() for x in os.getenv("ALERT_TIMES", "").split(",") if x.strip()]
+ALERT_TIMES = [x.strip() for x in os.getenv("ALERT_TIMES", "08:00,17:00,21:30,02:45,11:45,17:45,03:30,17:00").split(",") if x.strip()]
 DB_PATH = os.getenv("BOT_DB_PATH", "bot_users.sqlite3")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "16"))
 client = AsyncOpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -282,7 +282,7 @@ async def post_init(application: Application):
             application.job_queue.run_daily(
                 scheduled_alert,
                 time=time(hour, minute, tzinfo=zone()),
-                days=(0, 1, 2, 3),
+                days=(0, 1, 3),
                 name=f"crypto-alert-{hour:02d}{minute:02d}",
             )
         except Exception:

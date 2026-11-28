@@ -14,4 +14,4 @@ services:
       - key: DEFAULT_TIMEZONE
         value: Asia/Tehran
       - key: ALERT_TIMES
-        sync: false
+        value: "08:00,17:00,21:30,02:45,11:45,17:45,03:30,17:00"
